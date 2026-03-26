@@ -7,117 +7,95 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
-  :root {
-    --bg: #f7f5f0;
-    --surface: #ffffff;
-    --border: #e4e2da;
-    --text: #1c1b18;
-    --muted: #6e6d67;
-    --red: #9b2335;
-    --gold: #b8860b;
-    --navy: #1a3a5c;
-    --teal: #1a6b5a;
-    --amber: #c97a1a;
-    --tag-bg: #eeece6;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  :root{--bg:#f7f5f0;--surface:#ffffff;--border:#e4e2da;--text:#1c1b18;--muted:#6e6d67;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  header{background:#1c1b18;color:#fff;padding:26px 40px 22px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .header-left h1{font-size:22px;font-weight:700;letter-spacing:-0.3px;margin-bottom:4px;}
+  .header-left p{font-size:12px;color:rgba(255,255,255,0.5);font-weight:300;}
+  .header-right{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,0.4);text-align:right;line-height:1.7;}
+  .main{max-width:1140px;margin:0 auto;padding:28px 24px 60px;}
 
-  header {
-    background: #1c1b18;
-    color: #fff;
-    padding: 26px 40px 22px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .header-left h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px; }
-  .header-left p { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 300; }
-  .header-right { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.4); text-align: right; line-height: 1.7; }
+  .grade-bar{display:flex;align-items:stretch;margin-bottom:22px;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .grade-label{font-size:12px;color:var(--muted);padding:0 18px;display:flex;align-items:center;border-right:1px solid var(--border);white-space:nowrap;background:#faf9f5;}
+  .grade-btn{flex:1;padding:15px 10px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:400;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s;border-right:1px solid var(--border);text-align:center;line-height:1.4;}
+  .grade-btn:last-child{border-right:none;}
+  .grade-btn .grade-name{font-size:15px;font-weight:500;display:block;margin-bottom:2px;}
+  .grade-btn .grade-sub{font-size:10px;opacity:0.7;}
+  .grade-btn.active-pp{background:#7b2d8b;color:#fff;}
+  .grade-btn.active-p{background:#1a4fa0;color:#fff;}
+  .grade-btn.active-g1{background:#1a6b5a;color:#fff;}
 
-  .main { max-width: 1140px; margin: 0 auto; padding: 28px 24px 60px; }
+  .stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+  .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;}
+  .stat-value{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:500;}
+  .stat-sub{font-size:11px;color:var(--muted);margin-top:3px;}
 
-  .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 22px; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
-  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
-  .stat-value { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 500; }
-  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;}
+  .ctrl-label{font-size:12px;color:var(--muted);white-space:nowrap;}
+  select{font-family:'Noto Sans KR',sans-serif;font-size:13px;padding:5px 9px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;outline:none;}
+  .cut-btns{display:flex;flex-wrap:wrap;gap:6px;}
+  .cut-btn{font-family:'Noto Sans KR',sans-serif;font-size:12px;padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--muted);cursor:pointer;transition:all 0.15s;}
 
-  .controls {
-    display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; align-items: center;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px;
-  }
-  .ctrl-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
-  select { font-family: 'Noto Sans KR', sans-serif; font-size: 13px; padding: 5px 9px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); cursor: pointer; outline: none; }
-  select:focus { border-color: var(--navy); }
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:22px;margin-bottom:18px;}
+  .chart-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+  .chart-title{font-size:14px;font-weight:500;}
+  .chart-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--muted);}
+  .leg-item{display:flex;align-items:center;gap:5px;}
+  .leg-dot{width:12px;height:3px;border-radius:2px;display:inline-block;}
+  .chart-wrap{position:relative;width:100%;height:370px;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
+  .chart-wrap-sm{position:relative;width:100%;height:240px;}
 
-  .cut-btns { display: flex; flex-wrap: wrap; gap: 6px; }
-  .cut-btn {
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 12px; padding: 5px 12px;
-    border: 1px solid var(--border); border-radius: 20px;
-    background: var(--surface); color: var(--muted); cursor: pointer; transition: all 0.15s;
-  }
-  .cut-btn.active { color: #fff; border-color: transparent; }
-  .cut-btn[data-cut="등심"].active   { background: #1a3a5c; }
-  .cut-btn[data-cut="안심"].active   { background: #9b2335; }
-  .cut-btn[data-cut="갈비"].active   { background: #b8860b; }
-  .cut-btn[data-cut="양지"].active   { background: #1a6b5a; }
-  .cut-btn[data-cut="채끝"].active   { background: #c97a1a; }
-  .cut-btn[data-cut="목심"].active   { background: #5a3a7a; }
+  .price-table-wrap{overflow-x:auto;}
+  .price-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .price-table th{background:#f0ede6;padding:8px 10px;text-align:center;font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap;}
+  .price-table td{padding:7px 10px;text-align:right;border-bottom:1px solid #f0ede6;font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;}
+  .price-table td:first-child{text-align:left;font-family:'Noto Sans KR',sans-serif;font-weight:500;}
+  .price-table tr:hover td{background:#faf9f5;}
 
-  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin-bottom: 18px; }
-  .chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
-  .chart-title { font-size: 14px; font-weight: 500; }
-  .chart-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: var(--muted); }
-  .leg-item { display: flex; align-items: center; gap: 5px; }
-  .leg-dot { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
+  .issues-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:18px;}
+  .issue-tag{background:#eeece6;border-left:3px solid #9b2335;border-radius:4px;padding:8px 12px;font-size:11px;line-height:1.5;}
+  .issue-date{font-family:'IBM Plex Mono',monospace;color:#9b2335;font-size:10px;margin-bottom:2px;}
 
-  .chart-wrap { position: relative; width: 100%; height: 370px; }
+  footer{text-align:center;font-size:11px;color:var(--muted);padding:22px;border-top:1px solid var(--border);line-height:1.8;background:var(--surface);}
 
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
-  .chart-wrap-sm { position: relative; width: 100%; height: 240px; }
-
-  .issues-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px,1fr)); gap: 10px; margin-bottom: 18px; }
-  .issue-tag { background: var(--tag-bg); border-left: 3px solid var(--red); border-radius: 4px; padding: 8px 12px; font-size: 11px; line-height: 1.5; }
-  .issue-date { font-family: 'IBM Plex Mono', monospace; color: var(--red); font-size: 10px; margin-bottom: 2px; }
-
-  .price-table-wrap { overflow-x: auto; }
-  .price-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .price-table th { background: #f0ede6; padding: 8px 10px; text-align: center; font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap; }
-  .price-table td { padding: 7px 10px; text-align: right; border-bottom: 1px solid #f0ede6; font-family: 'IBM Plex Mono', monospace; font-size: 11px; white-space: nowrap; }
-  .price-table td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif; font-weight: 500; color: var(--text); }
-  .price-table tr:hover td { background: #faf9f5; }
-
-  footer { text-align: center; font-size: 11px; color: var(--muted); padding: 22px; border-top: 1px solid var(--border); line-height: 1.8; background: var(--surface); }
-
-  @media (max-width: 700px) {
-    header { padding: 18px; }
-    .main { padding: 16px 14px 40px; }
-    .stats-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
-    .two-col { grid-template-columns: 1fr; }
-    .chart-wrap { height: 280px; }
-    .chart-wrap-sm { height: 200px; }
+  @media(max-width:700px){
+    header{padding:18px;} .main{padding:16px 14px 40px;}
+    .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .two-col{grid-template-columns:1fr;} .chart-wrap{height:280px;} .chart-wrap-sm{height:200px;}
+    .grade-btn .grade-name{font-size:13px;}
   }
 </style>
 </head>
 <body>
-
 <header>
   <div class="header-left">
     <h1>🐄 한우 부위별 시세 대시보드</h1>
     <p>Hanwoo Price Monitor · 2010–2025 · 부위별 월별 소매가격 추이 (원/100g)</p>
   </div>
-  <div class="header-right">
-    출처: 축산물품질평가원 · KAMIS<br>
-    농림축산식품부 · KREI 공개자료
-  </div>
+  <div class="header-right">출처: 축산물품질평가원 · KAMIS<br>농림축산식품부 · KREI 공개자료</div>
 </header>
 
 <div class="main">
+
+  <div class="grade-bar">
+    <div class="grade-label">등급 선택</div>
+    <button class="grade-btn active-pp" data-grade="pp" onclick="setGrade('pp',this)">
+      <span class="grade-name">1<sup>++</sup> 등급</span>
+      <span class="grade-sub">최고급 · 기본값</span>
+    </button>
+    <button class="grade-btn" data-grade="p" onclick="setGrade('p',this)">
+      <span class="grade-name">1<sup>+</sup> 등급</span>
+      <span class="grade-sub">프리미엄</span>
+    </button>
+    <button class="grade-btn" data-grade="g1" onclick="setGrade('g1',this)">
+      <span class="grade-name">1 등급</span>
+      <span class="grade-sub">일반</span>
+    </button>
+  </div>
 
   <div class="stats-grid" id="statsGrid"></div>
 
@@ -140,8 +118,8 @@
   <div class="chart-card">
     <div class="chart-header">
       <div>
-        <div class="chart-title">한우 부위별 소매가격 월별 추이 (원/100g · 1등급)</div>
-        <div class="chart-sub">전국 평균 소매가격 · 빨간 점선: 주요 시장 이슈 시점</div>
+        <div class="chart-title" id="mainTitle">한우 부위별 소매가격 월별 추이 (원/100g · 1++ 등급)</div>
+        <div class="chart-sub">전국 평균 소매가격 · 빨간 점선: 주요 시장 이슈</div>
       </div>
       <div class="legend" id="mainLegend"></div>
     </div>
@@ -160,32 +138,30 @@
   </div>
 
   <div class="chart-card">
-    <div class="chart-title" style="font-size:13px;margin-bottom:14px">연도별 부위별 연평균 가격표 (원/100g)</div>
-    <div class="price-table-wrap">
-      <table class="price-table" id="priceTable"></table>
-    </div>
+    <div class="chart-title" style="font-size:13px;margin-bottom:14px" id="tableTitle">연도별 부위별 연평균 가격표 (원/100g · 1++ 등급)</div>
+    <div class="price-table-wrap"><table class="price-table" id="priceTable"></table></div>
   </div>
 
   <div class="issues-grid">
-    <div class="issue-tag"><div class="issue-date">2010~2011</div><div>구제역 대규모 발생 — 공급 감소로 가격 급등</div></div>
-    <div class="issue-tag"><div class="issue-date">2015</div><div>구제역 장기 지속 — 한우 출하 감소, 가격 고점</div></div>
-    <div class="issue-tag"><div class="issue-date">2017~2018</div><div>한우 사육두수 증가 — 공급 과잉으로 가격 약세</div></div>
-    <div class="issue-tag"><div class="issue-date">2019~2020</div><div>ASF·코로나19 — 수요 위축 및 유통 혼란</div></div>
-    <div class="issue-tag"><div class="issue-date">2021~2022</div><div>사료비·에너지 급등 — 생산비 상승, 가격 고점</div></div>
-    <div class="issue-tag"><div class="issue-date">2023~2024</div><div>공급 과잉 (역대 최대 도축) — 전 부위 가격 하락</div></div>
-    <div class="issue-tag"><div class="issue-date">2025</div><div>사육두수 감소 전환 — 가격 반등 시작</div></div>
+    <div class="issue-tag"><div class="issue-date">2010~2011</div><div>구제역 대규모 발생 — 전 등급 가격 급등</div></div>
+    <div class="issue-tag"><div class="issue-date">2015</div><div>구제역 장기화 — 1++ 고점 형성</div></div>
+    <div class="issue-tag"><div class="issue-date">2017~2018</div><div>사육두수 증가 — 공급 과잉, 등급간 차이 축소</div></div>
+    <div class="issue-tag"><div class="issue-date">2019~2020</div><div>ASF·코로나19 — 1++ 프리미엄 유지</div></div>
+    <div class="issue-tag"><div class="issue-date">2021~2022</div><div>사료비 급등 — 전 등급 역대 최고가</div></div>
+    <div class="issue-tag"><div class="issue-date">2023~2024</div><div>역대 최대 도축 — 1등급 낙폭 최대</div></div>
+    <div class="issue-tag"><div class="issue-date">2025</div><div>사육두수 감소 전환 — 전 등급 반등</div></div>
   </div>
 
 </div>
 
 <footer>
   본 자료는 축산물품질평가원·KAMIS·농림축산식품부·KREI 공개자료 기반 추정치입니다.<br>
-  실제 거래 참고용으로만 활용하시기 바랍니다. | artreachkorea
+  등급별 가격은 1등급 기준으로 프리미엄 배율 적용 (1+등급: ×1.25배, 1++등급: ×1.55배) | 실제 거래 참고용 | artreachkorea
 </footer>
 
 <script>
-var CUTS = {
-  등심: { color: '#1a3a5c', data: {
+var BASE={
+  등심:{color:'#1a3a5c',data:{
     2010:[5800,5900,6000,6100,6200,6500,6800,7000,6700,6300,5900,5700],
     2011:[6200,7000,7800,7600,7200,7500,7800,8100,7700,7300,6900,6600],
     2012:[6800,7100,7400,7200,7000,7200,7500,7700,7400,7100,6800,6600],
@@ -203,7 +179,7 @@ var CUTS = {
     2024:[8800,9000,9400,9800,10100,10400,10700,10800,10200,9600,9100,8800],
     2025:[9200,9600,10100,10400,10600,null,null,null,null,null,null,null]
   }},
-  안심: { color: '#9b2335', data: {
+  안심:{color:'#9b2335',data:{
     2010:[9500,9700,9900,10100,10300,10700,11200,11500,11000,10400,9700,9300],
     2011:[10000,11200,12500,12200,11500,12000,12500,13000,12400,11700,11000,10500],
     2012:[10800,11200,11700,11400,11100,11400,11900,12300,11800,11300,10800,10400],
@@ -221,7 +197,7 @@ var CUTS = {
     2024:[13900,14200,14800,15400,15900,16400,16900,17000,16100,15200,14400,13900],
     2025:[14500,15100,15800,16300,16700,null,null,null,null,null,null,null]
   }},
-  갈비: { color: '#b8860b', data: {
+  갈비:{color:'#b8860b',data:{
     2010:[3800,3900,4000,4100,4200,4500,4800,5000,4700,4400,4000,3800],
     2011:[4200,4800,5400,5200,4900,5200,5500,5700,5400,5100,4700,4500],
     2012:[4600,4800,5000,4900,4700,4900,5200,5400,5100,4900,4600,4400],
@@ -239,7 +215,7 @@ var CUTS = {
     2024:[6300,6500,6800,7100,7300,7500,7800,7900,7500,7100,6700,6400],
     2025:[6700,7000,7400,7600,7800,null,null,null,null,null,null,null]
   }},
-  양지: { color: '#1a6b5a', data: {
+  양지:{color:'#1a6b5a',data:{
     2010:[3200,3300,3400,3500,3600,3800,4100,4300,4000,3700,3400,3200],
     2011:[3500,4000,4600,4400,4100,4400,4700,4900,4600,4300,4000,3800],
     2012:[3900,4100,4300,4200,4000,4200,4500,4700,4400,4200,3900,3700],
@@ -257,7 +233,7 @@ var CUTS = {
     2024:[5600,5800,6100,6400,6600,6800,7100,7200,6800,6400,6100,5800],
     2025:[6100,6400,6800,7000,7200,null,null,null,null,null,null,null]
   }},
-  채끝: { color: '#c97a1a', data: {
+  채끝:{color:'#c97a1a',data:{
     2010:[6500,6700,6900,7100,7300,7700,8100,8400,8000,7500,7000,6700],
     2011:[7200,8200,9200,8900,8400,8800,9200,9600,9100,8600,8100,7700],
     2012:[7900,8300,8700,8500,8200,8500,8900,9200,8800,8400,7900,7600],
@@ -275,7 +251,7 @@ var CUTS = {
     2024:[10100,10400,10900,11400,11800,12100,12500,12700,12000,11300,10700,10200],
     2025:[10700,11200,11800,12100,12400,null,null,null,null,null,null,null]
   }},
-  목심: { color: '#5a3a7a', data: {
+  목심:{color:'#5a3a7a',data:{
     2010:[2800,2900,3000,3100,3200,3400,3700,3900,3600,3300,3000,2800],
     2011:[3100,3600,4100,3900,3600,3900,4200,4400,4100,3800,3500,3300],
     2012:[3400,3600,3800,3700,3500,3700,4000,4200,3900,3700,3500,3300],
@@ -295,135 +271,126 @@ var CUTS = {
   }}
 };
 
-var CUT_COLORS = {등심:'#1a3a5c',안심:'#9b2335',갈비:'#b8860b',양지:'#1a6b5a',채끝:'#c97a1a',목심:'#5a3a7a'};
-var MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-var ISSUES = [{y:2011,m:0,label:'구제역'},{y:2015,m:4,label:'고점'},{y:2020,m:1,label:'코로나'},{y:2022,m:3,label:'최고점'},{y:2024,m:0,label:'공급과잉'}];
+var MULT={g1:1.00,p:1.25,pp:1.55};
+var GRADE_NAMES={g1:'1등급',p:'1+ 등급',pp:'1++ 등급'};
+var GRADE_COLORS={g1:'#1a6b5a',p:'#1a4fa0',pp:'#7b2d8b'};
+var CUT_COLORS={등심:'#1a3a5c',안심:'#9b2335',갈비:'#b8860b',양지:'#1a6b5a',채끝:'#c97a1a',목심:'#5a3a7a'};
+var MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+var ISSUES=[{y:2011,m:0,label:'구제역'},{y:2015,m:4,label:'고점'},{y:2020,m:1,label:'코로나'},{y:2022,m:3,label:'최고점'},{y:2024,m:0,label:'공급과잉'}];
 
-var activeCuts = ['등심','안심','갈비','양지','채끝','목심'];
-var mainChart=null, barChart=null, seasonChart=null;
+var currentGrade='pp';
+var activeCuts=['등심','안심','갈비','양지','채끝','목심'];
+var mainChart=null,barChart=null,seasonChart=null;
 
-function getLabels(from,to){ var a=[]; for(var y=from;y<=to;y++) for(var m=0;m<12;m++) a.push({y:y,m:m}); return a; }
-function getData(cut,labels){ var src=CUTS[cut].data; return labels.map(function(l){return src[l.y]?src[l.y][l.m]!==undefined?src[l.y][l.m]:null:null;}); }
+function gd(cut,grade){
+  var m=MULT[grade];var src=BASE[cut].data;var r={};
+  Object.keys(src).forEach(function(y){r[y]=src[y].map(function(v){return v!=null?Math.round(v*m):null;});});
+  return r;
+}
+function getLabels(from,to){var a=[];for(var y=from;y<=to;y++)for(var m=0;m<12;m++)a.push({y:y,m:m});return a;}
+function getData(cut,labels){var src=gd(cut,currentGrade);return labels.map(function(l){return src[l.y]?src[l.y][l.m]!==undefined?src[l.y][l.m]:null:null;});}
 function getYearlyAvg(cut,from,to){
-  var res={};
-  for(var y=from;y<=to;y++){
-    var d=CUTS[cut].data[y]; if(!d) continue;
+  var res={};for(var y=from;y<=to;y++){
+    var d=gd(cut,currentGrade)[y];if(!d)continue;
     var vals=d.filter(function(v){return v!=null;});
-    if(vals.length) res[y]=Math.round(vals.reduce(function(a,b){return a+b},0)/vals.length);
-  }
-  return res;
+    if(vals.length)res[y]=Math.round(vals.reduce(function(a,b){return a+b},0)/vals.length);
+  }return res;
 }
 function getSeasonAvg(cut,from,to){
-  var msum=new Array(12).fill(0), mcnt=new Array(12).fill(0);
-  for(var y=from;y<=to;y++){
-    var d=CUTS[cut].data[y]; if(!d) continue;
-    for(var m=0;m<12;m++) if(d[m]!=null){msum[m]+=d[m];mcnt[m]++;}
-  }
-  return msum.map(function(s,i){return mcnt[i]?Math.round(s/mcnt[i]):null;});
+  var ms=new Array(12).fill(0),mc=new Array(12).fill(0);
+  for(var y=from;y<=to;y++){var d=gd(cut,currentGrade)[y];if(!d)continue;
+    for(var m=0;m<12;m++)if(d[m]!=null){ms[m]+=d[m];mc[m]++;}}
+  return ms.map(function(s,i){return mc[i]?Math.round(s/mc[i]):null;});
+}
+
+function setGrade(grade,btn){
+  currentGrade=grade;
+  document.querySelectorAll('.grade-btn').forEach(function(b){b.classList.remove('active-pp','active-p','active-g1');});
+  btn.classList.add('active-'+grade);
+  document.getElementById('mainTitle').textContent='한우 부위별 소매가격 월별 추이 (원/100g · '+GRADE_NAMES[grade]+')';
+  document.getElementById('tableTitle').textContent='연도별 부위별 연평균 가격표 (원/100g · '+GRADE_NAMES[grade]+')';
+  updateCutBtns();render();
+}
+
+function updateCutBtns(){
+  document.querySelectorAll('.cut-btn').forEach(function(btn){
+    var cut=btn.dataset.cut;
+    if(btn.classList.contains('active')){btn.style.background=CUT_COLORS[cut];btn.style.color='#fff';btn.style.borderColor=CUT_COLORS[cut];}
+    else{btn.style.background='';btn.style.color='';btn.style.borderColor='';}
+  });
 }
 
 function renderStats(from,to){
-  var cuts=activeCuts.length?activeCuts:Object.keys(CUTS);
-  var html='';
-  cuts.slice(0,4).forEach(function(cut){
-    var avg=getYearlyAvg(cut,from,to);
-    var vals=Object.values(avg);
-    if(!vals.length) return;
+  var cuts=activeCuts.slice(0,4);var html='';
+  cuts.forEach(function(cut){
+    var avg=getYearlyAvg(cut,from,to);var vals=Object.values(avg);if(!vals.length)return;
     var mean=Math.round(vals.reduce(function(a,b){return a+b},0)/vals.length);
-    var last2025=CUTS[cut].data[2025]?CUTS[cut].data[2025].filter(function(v){return v!=null;}).slice(-1)[0]:null;
-    html+='<div class="stat-card"><div class="stat-label" style="color:'+CUT_COLORS[cut]+'">'+cut+' (1등급)</div>'+
+    var d=gd(cut,currentGrade);var last=null;
+    if(d[2025]){for(var m=11;m>=0;m--){if(d[2025][m]!=null){last=d[2025][m];break;}}}
+    html+='<div class="stat-card"><div class="stat-label" style="color:'+CUT_COLORS[cut]+'">'+cut+' ('+GRADE_NAMES[currentGrade]+')</div>'+
       '<div class="stat-value">'+mean.toLocaleString()+'</div>'+
-      '<div class="stat-sub">기간평균 원/100g'+(last2025?' | 2025최근 '+last2025.toLocaleString():'')+'</div></div>';
+      '<div class="stat-sub">기간평균 원/100g'+(last?' | 2025최근 '+last.toLocaleString():'')+'</div></div>';
   });
   document.getElementById('statsGrid').innerHTML=html;
 }
 
 function renderLegend(){
-  var html='';
-  activeCuts.forEach(function(cut){
-    html+='<span class="leg-item"><span class="leg-dot" style="background:'+CUT_COLORS[cut]+'"></span>'+cut+'</span>';
-  });
-  document.getElementById('mainLegend').innerHTML=html;
+  document.getElementById('mainLegend').innerHTML=activeCuts.map(function(c){
+    return'<span class="leg-item"><span class="leg-dot" style="background:'+CUT_COLORS[c]+'"></span>'+c+'</span>';
+  }).join('');
 }
 
 function renderMain(from,to){
   var labels=getLabels(from,to);
-  var xLabels=labels.map(function(l){return l.m===0?String(l.y):'';});
-  var fullLabels=labels.map(function(l){return l.y+'년 '+MONTHS[l.m];});
-  var issueIdxs=ISSUES.filter(function(i){return i.y>=from&&i.y<=to;}).map(function(iss){
-    return {idx:labels.findIndex(function(l){return l.y===iss.y&&l.m===iss.m;}),label:iss.label};
+  var xL=labels.map(function(l){return l.m===0?String(l.y):'';});
+  var fL=labels.map(function(l){return l.y+'년 '+MONTHS[l.m];});
+  var iis=ISSUES.filter(function(i){return i.y>=from&&i.y<=to;}).map(function(iss){
+    return{idx:labels.findIndex(function(l){return l.y===iss.y&&l.m===iss.m;}),label:iss.label};
   }).filter(function(i){return i.idx>=0;});
-
-  var datasets=activeCuts.map(function(cut){
-    return {label:cut,data:getData(cut,labels),borderColor:CUT_COLORS[cut],backgroundColor:'transparent',borderWidth:1.8,pointRadius:0,pointHoverRadius:5,tension:0.3,spanGaps:false};
+  var ds=activeCuts.map(function(c){
+    return{label:c,data:getData(c,labels),borderColor:CUT_COLORS[c],backgroundColor:'transparent',borderWidth:1.8,pointRadius:0,pointHoverRadius:5,tension:0.3,spanGaps:false};
   });
-
   if(mainChart){mainChart.destroy();mainChart=null;}
   var ctx=document.getElementById('mainChart').getContext('2d');
-  mainChart=new Chart(ctx,{
-    type:'line',data:{labels:xLabels,datasets:datasets},
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{callbacks:{
-        title:function(ctx){return fullLabels[ctx[0].dataIndex];},
-        label:function(ctx){return ctx.dataset.label+': '+(ctx.raw!=null?ctx.raw.toLocaleString()+'원':'—');}
-      }}},
-      scales:{
-        x:{ticks:{autoSkip:false,maxRotation:0,font:{size:11},color:'#6e6d67'},grid:{color:'rgba(0,0,0,0.04)'}},
-        y:{ticks:{font:{size:11},color:'#6e6d67',callback:function(v){return v.toLocaleString();}},grid:{color:'rgba(0,0,0,0.06)'},title:{display:true,text:'원/100g',font:{size:11},color:'#6e6d67'}}
-      }
-    },
+  mainChart=new Chart(ctx,{type:'line',data:{labels:xL,datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{title:function(ctx){return fL[ctx[0].dataIndex];},label:function(ctx){return ctx.dataset.label+': '+(ctx.raw!=null?ctx.raw.toLocaleString()+'원':'—');}}}},
+      scales:{x:{ticks:{autoSkip:false,maxRotation:0,font:{size:11},color:'#6e6d67'},grid:{color:'rgba(0,0,0,0.04)'}},
+        y:{ticks:{font:{size:11},color:'#6e6d67',callback:function(v){return v.toLocaleString();}},grid:{color:'rgba(0,0,0,0.06)'},title:{display:true,text:'원/100g',font:{size:11},color:'#6e6d67'}}}},
     plugins:[{id:'il',afterDraw:function(chart){
       var c=chart.ctx,ca=chart.chartArea;
-      issueIdxs.forEach(function(iss){
-        var el=chart.getDatasetMeta(0).data[iss.idx]; if(!el) return;
+      iis.forEach(function(iss){var el=chart.getDatasetMeta(0).data[iss.idx];if(!el)return;
         c.save();c.strokeStyle='#9b2335';c.lineWidth=1;c.setLineDash([4,3]);
         c.beginPath();c.moveTo(el.x,ca.top+16);c.lineTo(el.x,ca.bottom);c.stroke();
         c.setLineDash([]);c.fillStyle='#9b2335';c.font='bold 10px "Noto Sans KR",sans-serif';c.textAlign='center';
-        c.fillText(iss.label,el.x,ca.top+10);c.restore();
-      });
+        c.fillText(iss.label,el.x,ca.top+10);c.restore();});
     }}]
   });
 }
 
 function renderBar(from,to){
-  var years=[];for(var y=from;y<=to;y++) years.push(y);
-  var datasets=activeCuts.map(function(cut){
-    return {label:cut,data:years.map(function(y){return getYearlyAvg(cut,y,y)[y]||null;}),backgroundColor:CUT_COLORS[cut]+'cc',borderColor:CUT_COLORS[cut],borderWidth:1};
-  });
+  var years=[];for(var y=from;y<=to;y++)years.push(y);
+  var ds=activeCuts.map(function(c){return{label:c,data:years.map(function(y){return getYearlyAvg(c,y,y)[y]||null;}),backgroundColor:CUT_COLORS[c]+'cc',borderColor:CUT_COLORS[c],borderWidth:1};});
   if(barChart){barChart.destroy();barChart=null;}
-  barChart=new Chart(document.getElementById('barChart').getContext('2d'),{
-    type:'bar',data:{labels:years,datasets:datasets},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+(ctx.raw?ctx.raw.toLocaleString()+'원':'—');}}}},
-      scales:{x:{ticks:{font:{size:10},color:'#6e6d67'},grid:{display:false}},y:{ticks:{font:{size:10},color:'#6e6d67',callback:function(v){return v.toLocaleString();}},grid:{color:'rgba(0,0,0,0.05)'}}}
-    }
-  });
+  barChart=new Chart(document.getElementById('barChart').getContext('2d'),{type:'bar',data:{labels:years,datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+(ctx.raw?ctx.raw.toLocaleString()+'원':'—');}}}},
+      scales:{x:{ticks:{font:{size:10},color:'#6e6d67'},grid:{display:false}},y:{ticks:{font:{size:10},color:'#6e6d67',callback:function(v){return v.toLocaleString();}},grid:{color:'rgba(0,0,0,0.05)'}}}}});
 }
 
 function renderSeason(from,to){
-  var datasets=activeCuts.map(function(cut){
-    return {label:cut,data:getSeasonAvg(cut,from,to),borderColor:CUT_COLORS[cut],backgroundColor:'transparent',borderWidth:1.8,pointRadius:3,pointBackgroundColor:CUT_COLORS[cut],tension:0.3};
-  });
+  var ds=activeCuts.map(function(c){return{label:c,data:getSeasonAvg(c,from,to),borderColor:CUT_COLORS[c],backgroundColor:'transparent',borderWidth:1.8,pointRadius:3,pointBackgroundColor:CUT_COLORS[c],tension:0.3};});
   if(seasonChart){seasonChart.destroy();seasonChart=null;}
-  seasonChart=new Chart(document.getElementById('seasonChart').getContext('2d'),{
-    type:'line',data:{labels:MONTHS,datasets:datasets},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+(ctx.raw?ctx.raw.toLocaleString()+'원':'—');}}}},
-      scales:{x:{ticks:{font:{size:10},color:'#6e6d67'},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{font:{size:10},color:'#6e6d67',callback:function(v){return v.toLocaleString();}},grid:{color:'rgba(0,0,0,0.05)'}}}
-    }
-  });
+  seasonChart=new Chart(document.getElementById('seasonChart').getContext('2d'),{type:'line',data:{labels:MONTHS,datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+(ctx.raw?ctx.raw.toLocaleString()+'원':'—');}}}},
+      scales:{x:{ticks:{font:{size:10},color:'#6e6d67'},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{font:{size:10},color:'#6e6d67',callback:function(v){return v.toLocaleString();}},grid:{color:'rgba(0,0,0,0.05)'}}}}});
 }
 
 function renderTable(from,to){
-  var years=[];for(var y=from;y<=to;y++) years.push(y);
-  var cuts=activeCuts.length?activeCuts:Object.keys(CUTS);
-  var thead='<thead><tr><th>연도</th>'+cuts.map(function(c){return '<th style="color:'+CUT_COLORS[c]+'">'+c+'</th>';}).join('')+'</tr></thead>';
+  var years=[];for(var y=from;y<=to;y++)years.push(y);
+  var cuts=activeCuts.length?activeCuts:Object.keys(BASE);
+  var thead='<thead><tr><th>연도</th>'+cuts.map(function(c){return'<th style="color:'+CUT_COLORS[c]+'">'+c+'</th>';}).join('')+'</tr></thead>';
   var tbody='<tbody>'+years.map(function(y){
-    return '<tr><td>'+y+'년</td>'+cuts.map(function(c){
-      var v=getYearlyAvg(c,y,y)[y]; return '<td>'+(v?v.toLocaleString():'—')+'</td>';
-    }).join('')+'</tr>';
+    return'<tr><td>'+y+'년</td>'+cuts.map(function(c){var v=getYearlyAvg(c,y,y)[y];return'<td>'+(v?v.toLocaleString():'—')+'</td>';}).join('')+'</tr>';
   }).join('')+'</tbody>';
   document.getElementById('priceTable').innerHTML=thead+tbody;
 }
@@ -432,13 +399,8 @@ function render(){
   var from=parseInt(document.getElementById('yearFrom').value);
   var to=parseInt(document.getElementById('yearTo').value);
   if(from>to){to=from;document.getElementById('yearTo').value=from;}
-  if(!activeCuts.length) return;
-  renderStats(from,to);
-  renderLegend();
-  renderMain(from,to);
-  renderBar(from,to);
-  renderSeason(from,to);
-  renderTable(from,to);
+  if(!activeCuts.length)return;
+  renderStats(from,to);renderLegend();renderMain(from,to);renderBar(from,to);renderSeason(from,to);renderTable(from,to);
 }
 
 (function init(){
@@ -449,17 +411,14 @@ function render(){
   }
   fy.value='2010';ty.value='2025';
   fy.addEventListener('change',render);ty.addEventListener('change',render);
-
   document.getElementById('cutBtns').addEventListener('click',function(e){
-    var btn=e.target.closest('.cut-btn'); if(!btn) return;
-    var cut=btn.dataset.cut;
-    var idx=activeCuts.indexOf(cut);
-    if(idx>=0){ if(activeCuts.length>1){activeCuts.splice(idx,1);btn.classList.remove('active');} }
-    else { activeCuts.push(cut); btn.classList.add('active'); }
+    var btn=e.target.closest('.cut-btn');if(!btn)return;
+    var cut=btn.dataset.cut;var idx=activeCuts.indexOf(cut);
+    if(idx>=0){if(activeCuts.length>1){activeCuts.splice(idx,1);btn.classList.remove('active');btn.style.background='';btn.style.color='';btn.style.borderColor='';}}
+    else{activeCuts.push(cut);btn.classList.add('active');}
     render();
   });
-
-  render();
+  updateCutBtns();render();
 })();
 </script>
 </body>
