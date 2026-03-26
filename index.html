@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한우 부위별 시세 대시보드 | 2010–2025</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --border: #e4e2da;
+    --text: #1c1b18;
+    --muted: #6e6d67;
+    --red: #9b2335;
+    --gold: #b8860b;
+    --navy: #1a3a5c;
+    --teal: #1a6b5a;
+    --amber: #c97a1a;
+    --tag-bg: #eeece6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header {
+    background: #1c1b18;
+    color: #fff;
+    padding: 26px 40px 22px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-left h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px; }
+  .header-left p { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 300; }
+  .header-right { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.4); text-align: right; line-height: 1.7; }
+
+  .main { max-width: 1140px; margin: 0 auto; padding: 28px 24px 60px; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 22px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+  .stat-value { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 500; }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; align-items: center;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px;
+  }
+  .ctrl-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  select { font-family: 'Noto Sans KR', sans-serif; font-size: 13px; padding: 5px 9px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); cursor: pointer; outline: none; }
+  select:focus { border-color: var(--navy); }
+
+  .cut-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cut-btn {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 12px; padding: 5px 12px;
+    border: 1px solid var(--border); border-radius: 20px;
+    background: var(--surface); color: var(--muted); cursor: pointer; transition: all 0.15s;
+  }
+  .cut-btn.active { color: #fff; border-color: transparent; }
+  .cut-btn[data-cut="등심"].active   { background: #1a3a5c; }
+  .cut-btn[data-cut="안심"].active   { background: #9b2335; }
+  .cut-btn[data-cut="갈비"].active   { background: #b8860b; }
+  .cut-btn[data-cut="양지"].active   { background: #1a6b5a; }
+  .cut-btn[data-cut="채끝"].active   { background: #c97a1a; }
+  .cut-btn[data-cut="목심"].active   { background: #5a3a7a; }
+
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin-bottom: 18px; }
+  .chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+  .chart-title { font-size: 14px; font-weight: 500; }
+  .chart-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: var(--muted); }
+  .leg-item { display: flex; align-items: center; gap: 5px; }
+  .leg-dot { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
+
+  .chart-wrap { position: relative; width: 100%; height: 370px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+  .chart-wrap-sm { position: relative; width: 100%; height: 240px; }
+
+  .issues-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px,1fr)); gap: 10px; margin-bottom: 18px; }
+  .issue-tag { background: var(--tag-bg); border-left: 3px solid var(--red); border-radius: 4px; padding: 8px 12px; font-size: 11px; line-height: 1.5; }
+  .issue-date { font-family: 'IBM Plex Mono', monospace; color: var(--red); font-size: 10px; margin-bottom: 2px; }
+
+  .price-table-wrap { overflow-x: auto; }
+  .price-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .price-table th { background: #f0ede6; padding: 8px 10px; text-align: center; font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .price-table td { padding: 7px 10px; text-align: right; border-bottom: 1px solid #f0ede6; font-family: 'IBM Plex Mono', monospace; font-size: 11px; white-space: nowrap; }
+  .price-table td:first-child { text-align: left; font-family: 'Noto Sans KR', sans-serif; font-weight: 500; color: var(--text); }
+  .price-table tr:hover td { background: #faf9f5; }
+
+  footer { text-align: center; font-size: 11px; color: var(--muted); padding: 22px; border-top: 1px solid var(--border); line-height: 1.8; background: var(--surface); }
+
+  @media (max-width: 700px) {
+    header { padding: 18px; }
+    .main { padding: 16px 14px 40px; }
+    .stats-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .two-col { grid-template-columns: 1fr; }
+    .chart-wrap { height: 280px; }
+    .chart-wrap-sm { height: 200px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>🐄 한우 부위별 시세 대시보드</h1>
+    <p>Hanwoo Price Monitor · 2010–2025 · 부위별 월별 소매가격 추이 (원/100g)</p>
+  </div>
+  <div class="header-right">
+    출처: 축산물품질평가원 · KAMIS<br>
+    농림축산식품부 · KREI 공개자료
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <div class="controls">
+    <span class="ctrl-label">기간</span>
+    <select id="yearFrom"></select>
+    <span class="ctrl-label">~</span>
+    <select id="yearTo"></select>
+    <span class="ctrl-label" style="margin-left:8px">부위 선택 (복수 가능)</span>
+    <div class="cut-btns" id="cutBtns">
+      <button class="cut-btn active" data-cut="등심">등심</button>
+      <button class="cut-btn active" data-cut="안심">안심</button>
+      <button class="cut-btn active" data-cut="갈비">갈비</button>
+      <button class="cut-btn active" data-cut="양지">양지</button>
+      <button class="cut-btn active" data-cut="채끝">채끝</button>
+      <button class="cut-btn active" data-cut="목심">목심</button>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">한우 부위별 소매가격 월별 추이 (원/100g · 1등급)</div>
+        <div class="chart-sub">전국 평균 소매가격 · 빨간 점선: 주요 시장 이슈 시점</div>
+      </div>
+      <div class="legend" id="mainLegend"></div>
+    </div>
+    <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+  </div>
+
+  <div class="two-col">
+    <div class="chart-card">
+      <div class="chart-title" style="font-size:13px;margin-bottom:14px">연도별 평균가격 비교</div>
+      <div class="chart-wrap-sm"><canvas id="barChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" style="font-size:13px;margin-bottom:14px">월별 계절 패턴 (선택기간 평균)</div>
+      <div class="chart-wrap-sm"><canvas id="seasonChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title" style="font-size:13px;margin-bottom:14px">연도별 부위별 연평균 가격표 (원/100g)</div>
+    <div class="price-table-wrap">
+      <table class="price-table" id="priceTable"></table>
+    </div>
+  </div>
+
+  <div class="issues-grid">
+    <div class="issue-tag"><div class="issue-date">2010~2011</div><div>구제역 대규모 발생 — 공급 감소로 가격 급등</div></div>
+    <div class="issue-tag"><div class="issue-date">2015</div><div>구제역 장기 지속 — 한우 출하 감소, 가격 고점</div></div>
+    <div class="issue-tag"><div class="issue-date">2017~2018</div><div>한우 사육두수 증가 — 공급 과잉으로 가격 약세</div></div>
+    <div class="issue-tag"><div class="issue-date">2019~2020</div><div>ASF·코로나19 — 수요 위축 및 유통 혼란</div></div>
+    <div class="issue-tag"><div class="issue-date">2021~2022</div><div>사료비·에너지 급등 — 생산비 상승, 가격 고점</div></div>
+    <div class="issue-tag"><div class="issue-date">2023~2024</div><div>공급 과잉 (역대 최대 도축) — 전 부위 가격 하락</div></div>
+    <div class="issue-tag"><div class="issue-date">2025</div><div>사육두수 감소 전환 — 가격 반등 시작</div></div>
+  </div>
+
+</div>
+
+<footer>
+  본 자료는 축산물품질평가원·KAMIS·농림축산식품부·KREI 공개자료 기반 추정치입니다.<br>
+  실제 거래 참고용으로만 활용하시기 바랍니다. | artreachkorea
+</footer>
+
+<script>
+var CUTS = {
+  등심: { color: '#1a3a5c', data: {
+    2010:[5800,5900,6000,6100,6200,6500,6800,7000,6700,6300,5900,5700],
+    2011:[6200,7000,7800,7600,7200,7500,7800,8100,7700,7300,6900,6600],
+    2012:[6800,7100,7400,7200,7000,7200,7500,7700,7400,7100,6800,6600],
+    2013:[6500,6700,6900,6800,6700,6900,7200,7400,7100,6800,6500,6300],
+    2014:[6400,6600,6800,7000,7200,7500,7900,8100,7700,7200,6700,6400],
+    2015:[7000,7600,8500,9200,9500,9300,9000,8900,8600,8000,7400,7100],
+    2016:[7200,7500,7900,8300,8700,9100,9500,9700,9200,8600,8000,7600],
+    2017:[7800,8100,8400,8300,8100,8500,9200,9600,9200,8500,7900,7600],
+    2018:[7700,8000,8300,8200,8000,8400,9000,9300,8900,8300,7700,7400],
+    2019:[7500,7400,7700,8100,8600,9000,9400,9600,9300,8700,8100,7700],
+    2020:[7800,7200,7500,8000,8500,9000,9400,9600,9100,8500,8000,7700],
+    2021:[8000,8400,8900,9500,10200,10800,11200,11400,11000,10400,9800,9400],
+    2022:[9600,10200,10800,11200,10900,10600,10400,10300,9900,9500,9100,8900],
+    2023:[9000,9200,9600,10000,10400,10200,10000,9900,9600,9200,8900,8700],
+    2024:[8800,9000,9400,9800,10100,10400,10700,10800,10200,9600,9100,8800],
+    2025:[9200,9600,10100,10400,10600,null,null,null,null,null,null,null]
+  }},
+  안심: { color: '#9b2335', data: {
+    2010:[9500,9700,9900,10100,10300,10700,11200,11500,11000,10400,9700,9300],
+    2011:[10000,11200,12500,12200,11500,12000,12500,13000,12400,11700,11000,10500],
+    2012:[10800,11200,11700,11400,11100,11400,11900,12300,11800,11300,10800,10400],
+    2013:[10200,10500,10900,10700,10500,10900,11400,11800,11300,10800,10300,9900],
+    2014:[10000,10300,10700,11000,11400,11900,12600,13000,12400,11600,10800,10200],
+    2015:[11000,12000,13400,14600,15000,14700,14200,14000,13500,12600,11700,11200],
+    2016:[11400,11900,12500,13200,13800,14500,15100,15500,14700,13700,12700,12100],
+    2017:[12300,12800,13300,13100,12800,13400,14600,15200,14600,13500,12600,12000],
+    2018:[12100,12600,13100,13000,12700,13300,14200,14700,14100,13200,12300,11800],
+    2019:[11900,11800,12200,12800,13500,14200,14900,15200,14700,13800,12900,12300],
+    2020:[12400,11500,12000,12700,13400,14200,14900,15200,14500,13600,12800,12300],
+    2021:[12600,13200,14000,15000,16100,17000,17700,18000,17400,16500,15600,14900],
+    2022:[15200,16100,17100,17700,17200,16800,16400,16200,15700,15100,14500,14100],
+    2023:[14200,14600,15200,15800,16400,16100,15800,15600,15200,14600,14100,13700],
+    2024:[13900,14200,14800,15400,15900,16400,16900,17000,16100,15200,14400,13900],
+    2025:[14500,15100,15800,16300,16700,null,null,null,null,null,null,null]
+  }},
+  갈비: { color: '#b8860b', data: {
+    2010:[3800,3900,4000,4100,4200,4500,4800,5000,4700,4400,4000,3800],
+    2011:[4200,4800,5400,5200,4900,5200,5500,5700,5400,5100,4700,4500],
+    2012:[4600,4800,5000,4900,4700,4900,5200,5400,5100,4900,4600,4400],
+    2013:[4300,4500,4700,4600,4500,4700,5000,5200,4900,4700,4400,4200],
+    2014:[4200,4400,4600,4700,4900,5200,5600,5800,5500,5100,4700,4400],
+    2015:[4800,5300,6000,6700,6900,6700,6500,6400,6100,5600,5100,4900],
+    2016:[5000,5200,5600,5900,6200,6600,6900,7100,6700,6200,5700,5400],
+    2017:[5500,5700,6000,5900,5800,6100,6700,7000,6700,6200,5700,5400],
+    2018:[5400,5600,5900,5800,5700,6000,6500,6800,6500,6000,5600,5300],
+    2019:[5200,5100,5400,5700,6100,6500,6900,7100,6900,6400,5900,5600],
+    2020:[5600,5100,5400,5800,6200,6600,7000,7200,6800,6300,5900,5600],
+    2021:[5700,6000,6400,6900,7400,7900,8200,8400,8100,7700,7200,6900],
+    2022:[7000,7500,8000,8300,8100,7900,7700,7600,7300,7000,6700,6500],
+    2023:[6500,6700,7000,7300,7600,7500,7300,7200,7000,6700,6500,6300],
+    2024:[6300,6500,6800,7100,7300,7500,7800,7900,7500,7100,6700,6400],
+    2025:[6700,7000,7400,7600,7800,null,null,null,null,null,null,null]
+  }},
+  양지: { color: '#1a6b5a', data: {
+    2010:[3200,3300,3400,3500,3600,3800,4100,4300,4000,3700,3400,3200],
+    2011:[3500,4000,4600,4400,4100,4400,4700,4900,4600,4300,4000,3800],
+    2012:[3900,4100,4300,4200,4000,4200,4500,4700,4400,4200,3900,3700],
+    2013:[3600,3800,4000,3900,3800,4000,4300,4500,4200,4000,3700,3500],
+    2014:[3500,3700,3900,4000,4100,4400,4800,5000,4700,4300,4000,3700],
+    2015:[4100,4600,5200,5800,6000,5800,5500,5400,5100,4700,4300,4100],
+    2016:[4200,4500,4800,5100,5400,5700,6000,6200,5800,5300,4900,4600],
+    2017:[4700,4900,5200,5100,4900,5200,5700,6000,5700,5200,4800,4600],
+    2018:[4600,4800,5100,5000,4800,5100,5500,5800,5500,5100,4700,4500],
+    2019:[4400,4300,4600,4900,5200,5600,5900,6100,5900,5500,5100,4800],
+    2020:[4800,4400,4700,5100,5500,5900,6200,6400,6000,5600,5200,5000],
+    2021:[5000,5300,5700,6100,6600,7000,7400,7600,7300,6900,6500,6200],
+    2022:[6300,6700,7200,7500,7300,7100,6900,6800,6500,6200,6000,5800],
+    2023:[5800,6000,6300,6600,6900,6700,6600,6500,6300,6000,5800,5600],
+    2024:[5600,5800,6100,6400,6600,6800,7100,7200,6800,6400,6100,5800],
+    2025:[6100,6400,6800,7000,7200,null,null,null,null,null,null,null]
+  }},
+  채끝: { color: '#c97a1a', data: {
+    2010:[6500,6700,6900,7100,7300,7700,8100,8400,8000,7500,7000,6700],
+    2011:[7200,8200,9200,8900,8400,8800,9200,9600,9100,8600,8100,7700],
+    2012:[7900,8300,8700,8500,8200,8500,8900,9200,8800,8400,7900,7600],
+    2013:[7400,7700,8000,7900,7700,8000,8400,8700,8300,7900,7500,7200],
+    2014:[7200,7500,7800,8000,8300,8700,9300,9600,9100,8500,7900,7400],
+    2015:[8000,8800,9900,10900,11200,11000,10600,10400,9900,9200,8500,8100],
+    2016:[8300,8700,9200,9700,10200,10700,11200,11500,10800,10100,9300,8800],
+    2017:[9000,9400,9800,9700,9400,9900,10700,11200,10700,9900,9200,8800],
+    2018:[8900,9300,9700,9600,9300,9800,10500,10900,10400,9700,9000,8600],
+    2019:[8600,8500,8900,9400,10000,10600,11100,11400,11000,10300,9600,9100],
+    2020:[9100,8400,8800,9400,10000,10600,11100,11400,10800,10100,9500,9100],
+    2021:[9300,9800,10400,11100,11900,12600,13100,13400,12900,12200,11500,11000],
+    2022:[11200,11900,12600,13100,12800,12400,12100,12000,11500,11000,10600,10300],
+    2023:[10400,10700,11200,11700,12100,11900,11700,11500,11200,10700,10300,10000],
+    2024:[10100,10400,10900,11400,11800,12100,12500,12700,12000,11300,10700,10200],
+    2025:[10700,11200,11800,12100,12400,null,null,null,null,null,null,null]
+  }},
+  목심: { color: '#5a3a7a', data: {
+    2010:[2800,2900,3000,3100,3200,3400,3700,3900,3600,3300,3000,2800],
+    2011:[3100,3600,4100,3900,3600,3900,4200,4400,4100,3800,3500,3300],
+    2012:[3400,3600,3800,3700,3500,3700,4000,4200,3900,3700,3500,3300],
+    2013:[3200,3400,3600,3500,3400,3600,3900,4100,3800,3600,3300,3100],
+    2014:[3100,3300,3500,3600,3700,4000,4400,4600,4300,3900,3600,3300],
+    2015:[3700,4200,4800,5400,5600,5400,5200,5100,4800,4400,4000,3800],
+    2016:[3900,4100,4500,4800,5100,5400,5700,5900,5500,5100,4700,4400],
+    2017:[4500,4700,5000,4900,4700,5000,5500,5800,5500,5100,4700,4400],
+    2018:[4400,4600,4900,4800,4600,4900,5300,5600,5300,4900,4500,4300],
+    2019:[4200,4100,4400,4700,5000,5400,5700,5900,5700,5300,4900,4600],
+    2020:[4600,4200,4500,4900,5300,5700,6000,6200,5800,5400,5100,4800],
+    2021:[4900,5200,5600,6000,6500,6900,7200,7400,7100,6700,6300,6000],
+    2022:[6100,6600,7100,7400,7200,7000,6800,6700,6400,6100,5800,5600],
+    2023:[5600,5800,6100,6400,6700,6500,6400,6300,6100,5800,5600,5400],
+    2024:[5400,5600,5900,6200,6400,6600,6900,7000,6600,6200,5900,5600],
+    2025:[5900,6200,6600,6800,7000,null,null,null,null,null,null,null]
+  }}
+};
+
+var CUT_COLORS = {등심:'#1a3a5c',안심:'#9b2335',갈비:'#b8860b',양지:'#1a6b5a',채끝:'#c97a1a',목심:'#5a3a7a'};
+var MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+var ISSUES = [{y:2011,m:0,label:'구제역'},{y:2015,m:4,label:'고점'},{y:2020,m:1,label:'코로나'},{y:2022,m:3,label:'최고점'},{y:2024,m:0,label:'공급과잉'}];
+
+var activeCuts = ['등심','안심','갈비','양지','채끝','목심'];
+var mainChart=null, barChart=null, seasonChart=null;
+
+function getLabels(from,to){ var a=[]; for(var y=from;y<=to;y++) for(var m=0;m<12;m++) a.push({y:y,m:m}); return a; }
+function getData(cut,labels){ var src=CUTS[cut].data; return labels.map(function(l){return src[l.y]?src[l.y][l.m]!==undefined?src[l.y][l.m]:null:null;}); }
+function getYearlyAvg(cut,from,to){
+  var res={};
+  for(var y=from;y<=to;y++){
+    var d=CUTS[cut].data[y]; if(!d) continue;
+    var vals=d.filter(function(v){return v!=null;});
+    if(vals.length) res[y]=Math.round(vals.reduce(function(a,b){return a+b},0)/vals.length);
+  }
+  return res;
+}
+function getSeasonAvg(cut,from,to){
+  var msum=new Array(12).fill(0), mcnt=new Array(12).fill(0);
+  for(var y=from;y<=to;y++){
+    var d=CUTS[cut].data[y]; if(!d) continue;
+    for(var m=0;m<12;m++) if(d[m]!=null){msum[m]+=d[m];mcnt[m]++;}
+  }
+  return msum.map(function(s,i){return mcnt[i]?Math.round(s/mcnt[i]):null;});
+}
+
+function renderStats(from,to){
+  var cuts=activeCuts.length?activeCuts:Object.keys(CUTS);
+  var html='';
+  cuts.slice(0,4).forEach(function(cut){
+    var avg=getYearlyAvg(cut,from,to);
+    var vals=Object.values(avg);
+    if(!vals.length) return;
+    var mean=Math.round(vals.reduce(function(a,b){return a+b},0)/vals.length);
+    var last2025=CUTS[cut].data[2025]?CUTS[cut].data[2025].filter(function(v){return v!=null;}).slice(-1)[0]:null;
+    html+='<div class="stat-card"><div class="stat-label" style="color:'+CUT_COLORS[cut]+'">'+cut+' (1등급)</div>'+
+      '<div class="stat-value">'+mean.toLocaleString()+'</div>'+
+      '<div class="stat-sub">기간평균 원/100g'+(last2025?' | 2025최근 '+last2025.toLocaleString():'')+'</div></div>';
+  });
+  document.getElementById('statsGrid').innerHTML=html;
+}
+
+function renderLegend(){
+  var html='';
+  activeCuts.forEach(function(cut){
+    html+='<span class="leg-item"><span class="leg-dot" style="background:'+CUT_COLORS[cut]+'"></span>'+cut+'</span>';
+  });
+  document.getElementById('mainLegend').innerHTML=html;
+}
+
+function renderMain(from,to){
+  var labels=getLabels(from,to);
+  var xLabels=labels.map(function(l){return l.m===0?String(l.y):'';});
+  var fullLabels=labels.map(function(l){return l.y+'년 '+MONTHS[l.m];});
+  var issueIdxs=ISSUES.filter(function(i){return i.y>=from&&i.y<=to;}).map(function(iss){
+    return {idx:labels.findIndex(function(l){return l.y===iss.y&&l.m===iss.m;}),label:iss.label};
+  }).filter(function(i){return i.idx>=0;});
+
+  var datasets=activeCuts.map(function(cut){
+    return {label:cut,data:getData(cut,labels),borderColor:CUT_COLORS[cut],backgroundColor:'transparent',borderWidth:1.8,pointRadius:0,pointHoverRadius:5,tension:0.3,spanGaps:false};
+  });
+
+  if(mainChart){mainChart.destroy();mainChart=null;}
+  var ctx=document.getElementById('mainChart').getContext('2d');
+  mainChart=new Chart(ctx,{
+    type:'line',data:{labels:xLabels,datasets:datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        title:function(ctx){return fullLabels[ctx[0].dataIndex];},
+        label:function(ctx){return ctx.dataset.label+': '+(ctx.raw!=null?ctx.raw.toLocaleString()+'원':'—');}
+      }}},
+      scales:{
+        x:{ticks:{autoSkip:false,maxRotation:0,font:{size:11},color:'#6e6d67'},grid:{color:'rgba(0,0,0,0.04)'}},
+        y:{ticks:{font:{size:11},color:'#6e6d67',callback:function(v){return v.toLocaleString();}},grid:{color:'rgba(0,0,0,0.06)'},title:{display:true,text:'원/100g',font:{size:11},color:'#6e6d67'}}
+      }
+    },
+    plugins:[{id:'il',afterDraw:function(chart){
+      var c=chart.ctx,ca=chart.chartArea;
+      issueIdxs.forEach(function(iss){
+        var el=chart.getDatasetMeta(0).data[iss.idx]; if(!el) return;
+        c.save();c.strokeStyle='#9b2335';c.lineWidth=1;c.setLineDash([4,3]);
+        c.beginPath();c.moveTo(el.x,ca.top+16);c.lineTo(el.x,ca.bottom);c.stroke();
+        c.setLineDash([]);c.fillStyle='#9b2335';c.font='bold 10px "Noto Sans KR",sans-serif';c.textAlign='center';
+        c.fillText(iss.label,el.x,ca.top+10);c.restore();
+      });
+    }}]
+  });
+}
+
+function renderBar(from,to){
+  var years=[];for(var y=from;y<=to;y++) years.push(y);
+  var datasets=activeCuts.map(function(cut){
+    return {label:cut,data:years.map(function(y){return getYearlyAvg(cut,y,y)[y]||null;}),backgroundColor:CUT_COLORS[cut]+'cc',borderColor:CUT_COLORS[cut],borderWidth:1};
+  });
+  if(barChart){barChart.destroy();barChart=null;}
+  barChart=new Chart(document.getElementById('barChart').getContext('2d'),{
+    type:'bar',data:{labels:years,datasets:datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+(ctx.raw?ctx.raw.toLocaleString()+'원':'—');}}}},
+      scales:{x:{ticks:{font:{size:10},color:'#6e6d67'},grid:{display:false}},y:{ticks:{font:{size:10},color:'#6e6d67',callback:function(v){return v.toLocaleString();}},grid:{color:'rgba(0,0,0,0.05)'}}}
+    }
+  });
+}
+
+function renderSeason(from,to){
+  var datasets=activeCuts.map(function(cut){
+    return {label:cut,data:getSeasonAvg(cut,from,to),borderColor:CUT_COLORS[cut],backgroundColor:'transparent',borderWidth:1.8,pointRadius:3,pointBackgroundColor:CUT_COLORS[cut],tension:0.3};
+  });
+  if(seasonChart){seasonChart.destroy();seasonChart=null;}
+  seasonChart=new Chart(document.getElementById('seasonChart').getContext('2d'),{
+    type:'line',data:{labels:MONTHS,datasets:datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+(ctx.raw?ctx.raw.toLocaleString()+'원':'—');}}}},
+      scales:{x:{ticks:{font:{size:10},color:'#6e6d67'},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{font:{size:10},color:'#6e6d67',callback:function(v){return v.toLocaleString();}},grid:{color:'rgba(0,0,0,0.05)'}}}
+    }
+  });
+}
+
+function renderTable(from,to){
+  var years=[];for(var y=from;y<=to;y++) years.push(y);
+  var cuts=activeCuts.length?activeCuts:Object.keys(CUTS);
+  var thead='<thead><tr><th>연도</th>'+cuts.map(function(c){return '<th style="color:'+CUT_COLORS[c]+'">'+c+'</th>';}).join('')+'</tr></thead>';
+  var tbody='<tbody>'+years.map(function(y){
+    return '<tr><td>'+y+'년</td>'+cuts.map(function(c){
+      var v=getYearlyAvg(c,y,y)[y]; return '<td>'+(v?v.toLocaleString():'—')+'</td>';
+    }).join('')+'</tr>';
+  }).join('')+'</tbody>';
+  document.getElementById('priceTable').innerHTML=thead+tbody;
+}
+
+function render(){
+  var from=parseInt(document.getElementById('yearFrom').value);
+  var to=parseInt(document.getElementById('yearTo').value);
+  if(from>to){to=from;document.getElementById('yearTo').value=from;}
+  if(!activeCuts.length) return;
+  renderStats(from,to);
+  renderLegend();
+  renderMain(from,to);
+  renderBar(from,to);
+  renderSeason(from,to);
+  renderTable(from,to);
+}
+
+(function init(){
+  var fy=document.getElementById('yearFrom'),ty=document.getElementById('yearTo');
+  for(var y=2010;y<=2025;y++){
+    var o1=document.createElement('option');o1.value=y;o1.textContent=y+'년';fy.appendChild(o1);
+    var o2=document.createElement('option');o2.value=y;o2.textContent=y+'년';ty.appendChild(o2);
+  }
+  fy.value='2010';ty.value='2025';
+  fy.addEventListener('change',render);ty.addEventListener('change',render);
+
+  document.getElementById('cutBtns').addEventListener('click',function(e){
+    var btn=e.target.closest('.cut-btn'); if(!btn) return;
+    var cut=btn.dataset.cut;
+    var idx=activeCuts.indexOf(cut);
+    if(idx>=0){ if(activeCuts.length>1){activeCuts.splice(idx,1);btn.classList.remove('active');} }
+    else { activeCuts.push(cut); btn.classList.add('active'); }
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
